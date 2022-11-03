@@ -9,8 +9,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
-import com.profesorfalken.jpowershell.PowerShell;
-
 /**
  * Diese Klasse beinhaltet alle noetigen Methoden.
  * 
@@ -70,12 +68,20 @@ public class DynDNS implements Runnable
 	void updater()
 	{
 		String ip = getOnlineIP();
-		if (!checkIP(ip))
+		if (ip != null)
 		{
-			lastIP = ip;
-			System.out.println("IP hat sich veraendert, Updater wird gestartet.");
-			runUpdaterUrl();
+			if (!checkIP(ip))
+			{
+				lastIP = ip;
+				System.out.println("IP hat sich veraendert, Updater wird gestartet.");
+				runUpdaterUrl();
+			}
 		}
+		else
+		{
+			System.out.println("IPv4 konnte nicht ermittelt werden!");
+		}
+
 	}
 
 
@@ -128,42 +134,27 @@ public class DynDNS implements Runnable
 
 
 	/**
-	 * Diese Methode ueberprueft was fuer ein OS laeuft. Danach wird ein Request an
-	 * ifconfig.me gesendet und die IPv4 ermittelt.
+	 * Es wird ein Request an ifconfig.me gesendet und die IPv4 ermittelt.
 	 * 
 	 * @return - Return ist die Empfangene IPv4 Adresse.
 	 */
 	String getOnlineIP()
 	{
-		if (System.getProperty("os.name").toLowerCase().contains("windows"))
+		String urlString = "https://ifconfig.me/ip";
+		URL url;
+		try
 		{
-			String command = "(Invoke-WebRequest ifconfig.me/ip -UseBasicParsing).Content.Trim()";
-			String powerShellOut = PowerShell.executeSingleCommand(command).getCommandOutput();
-			if (powerShellOut.contains("InvalidOperation"))
-			{
-				System.out.println("ifconfig.me evtl. nicht erreichbar.");
-				powerShellOut = null;
-			}
-			return powerShellOut;
+			url = new URL(urlString);
+			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
+			return br.readLine();
 		}
-		else if (System.getProperty("os.name").toLowerCase().contains("linux"))
+		catch (IOException e)
 		{
-			String urlString = "https://ifconfig.me/ip";
-			URL url;
-			try
-			{
-				url = new URL(urlString);
-				BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-				return br.readLine();
-			}
-			catch (IOException e)
-			{
-				System.out.println("ifconfig.me evtl. nicht erreichbar.");
-				e.printStackTrace();
-			}
+			System.out.println("ifconfig.me evtl. nicht erreichbar.");
+			e.printStackTrace();
 		}
 
-		return "Betriebssystem nicht erkannt!";
+		return null;
 	}
 
 	/**
