@@ -1,9 +1,6 @@
 package de.musti.dydns;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -45,7 +42,7 @@ public class DynDNS implements Runnable
 	{
 		int timer = tryParse(interval);
 
-		System.out.println("DynDNS Updater fuer ipv64.net gestartet.\n");
+		System.out.println("DynDNS Updater v0.2 fuer ipv64.net gestartet.\n");
 
 		try
 		{
@@ -112,7 +109,7 @@ public class DynDNS implements Runnable
 
 		try
 		{
-			System.out.println("Sende request an ipv64.net ...");
+			System.out.println("Sende request an ipv64.net ...\n");
 			Document d = Jsoup
 					.connect("https://ipv64.net/update.php?key=" + updateHash + "&domain=" + domain + "&ip=" + lastIP)
 					.ignoreContentType(true).get();
@@ -140,20 +137,19 @@ public class DynDNS implements Runnable
 	 */
 	String getOnlineIP()
 	{
-		String urlString = "https://ifconfig.me/ip";
-		URL url;
+		Document d = null;
 		try
 		{
-			url = new URL(urlString);
-			BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-			return br.readLine();
+			d = Jsoup.connect("https://ipv4.ipv64.net").timeout(6000).get();
+			Elements tbody = d.select("div.card-body dl.row dd.col-sm-7");
+
+			return tbody.val();
 		}
 		catch (IOException e)
 		{
-			System.out.println("ifconfig.me evtl. nicht erreichbar.");
+			System.out.println("https://ipv64.net evtl. nicht erreichbar!");
 			e.printStackTrace();
 		}
-
 		return null;
 	}
 
