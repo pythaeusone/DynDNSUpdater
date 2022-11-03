@@ -1,5 +1,7 @@
 # DynDNSUpdater
-DynDNS Updater für https://ipv64.net (Windows &amp; Linux)<br>
+DynDNS Updater für https://ipv64.net.<br>
+Java version 17.0.4.1 +<br>
+Getestet auf Windows 10 Pro und Ubuntu 22.04 <br>
 Ausführen über die Console:
 ```
 java -jar DynDNSUpdater.jar eureDomain Updatehash Zeit_in_Minuten
