@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"de.musti.dydns","l":"DynDNS"},{"p":"de.musti.dydns","l":"Main"}];updateSearchResults();
