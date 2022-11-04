@@ -16,7 +16,7 @@ import org.jsoup.select.Elements;
  * Diese Klasse beinhaltet alle noetigen Methoden.
  * 
  * @author Musti
- * @version 0.3
+ * @version 0.4
  */
 public class DynDNS implements Runnable
 {
@@ -55,7 +55,7 @@ public class DynDNS implements Runnable
 
 		int timer = tryParse(interval);
 
-		System.out.println("DynDNS Updater v0.3 fuer ipv64.net gestartet.\n");
+		System.out.println("DynDNS Updater v0.4 fuer ipv64.net gestartet.\n");
 
 		try
 		{
@@ -183,7 +183,7 @@ public class DynDNS implements Runnable
 	}
 
 	/**
-	 * Da die Intervalvariable eine Zahl sein muss, wird diese hier vin einem String
+	 * Da die Intervalvariable eine Zahl sein muss, wird diese hier von einem String
 	 * zu einem int geparst.
 	 * 
 	 * @param text - Interval als String.

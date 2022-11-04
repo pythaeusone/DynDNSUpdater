@@ -4,7 +4,7 @@ package de.musti.dydns;
  * Die Mainklasse :)
  * 
  * @author Musti
- * @version 0.3
+ * @version 0.4
  */
 public class Main
 {
