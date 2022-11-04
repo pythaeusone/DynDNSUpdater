@@ -1,6 +1,12 @@
 package de.musti.dydns;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -10,7 +16,7 @@ import org.jsoup.select.Elements;
  * Diese Klasse beinhaltet alle noetigen Methoden.
  * 
  * @author Musti
- * @version 0.1
+ * @version 0.3
  */
 public class DynDNS implements Runnable
 {
@@ -18,6 +24,10 @@ public class DynDNS implements Runnable
 	String updateHash;
 	String interval;
 	String lastIP;
+	String ip;
+	String logText;
+	SimpleDateFormat logZeit;
+	Calendar cal;
 	private volatile boolean stopeTimer = false;
 
 	/**
@@ -40,9 +50,12 @@ public class DynDNS implements Runnable
 	@Override
 	public void run()
 	{
+		logZeit = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+		cal = new GregorianCalendar();
+
 		int timer = tryParse(interval);
 
-		System.out.println("DynDNS Updater v0.2 fuer ipv64.net gestartet.\n");
+		System.out.println("DynDNS Updater v0.3 fuer ipv64.net gestartet.\n");
 
 		try
 		{
@@ -64,7 +77,7 @@ public class DynDNS implements Runnable
 	 */
 	void updater()
 	{
-		String ip = getOnlineIP();
+		ip = getOnlineIP();
 		if (ip != null)
 		{
 			if (!checkIP(ip))
@@ -106,7 +119,6 @@ public class DynDNS implements Runnable
 	 */
 	void runUpdaterUrl()
 	{
-
 		try
 		{
 			System.out.println("Sende request an ipv64.net ...\n");
@@ -121,11 +133,15 @@ public class DynDNS implements Runnable
 				System.out.println(bA.replaceAll("\"", " "));
 			}
 
+			logBuilder("UPDATER | " + logZeit.format(cal.getTime()) + " | LastIP: " + lastIP + " | NewIP: " + ip);
 		}
 		catch (IOException e)
 		{
 			System.out.println("Request fehlgeschlagen!");
+			logBuilder(
+					"\nUPDATER | " + logZeit.format(cal.getTime()) + " | Request fehlgeschlagen! Thread wird gestopt.");
 			e.printStackTrace();
+			signalStopeTimer();
 		}
 	}
 
@@ -148,7 +164,10 @@ public class DynDNS implements Runnable
 		catch (IOException e)
 		{
 			System.out.println("https://ipv64.net evtl. nicht erreichbar!");
+			logBuilder("\nGET-IP | " + logZeit.format(cal.getTime())
+					+ " | https://ipv64.net evtl. nicht erreichbar! Thread wird gestopt.");
 			e.printStackTrace();
+			signalStopeTimer();
 		}
 		return null;
 	}
@@ -156,9 +175,11 @@ public class DynDNS implements Runnable
 	/**
 	 * Diese Methode ist fuer die Zukunft, damit es spaeter ein Off Schalter gibt.
 	 */
-	public void signalStopeTimer()
+	void signalStopeTimer()
 	{
+		logBuilder("\nEXIT | " + logZeit.format(cal.getTime()) + " | Programm wurde wegen einem fehler beendet.\n");
 		stopeTimer = true;
+		System.exit(0);
 	}
 
 	/**
@@ -168,7 +189,7 @@ public class DynDNS implements Runnable
 	 * @param text - Interval als String.
 	 * @return - Interval als int.
 	 */
-	public static Integer tryParse(String text)
+	Integer tryParse(String text)
 	{
 		try
 		{
@@ -182,4 +203,38 @@ public class DynDNS implements Runnable
 			return 300000;
 		}
 	}
+
+	/**
+	 * Diese Methode erstellt, falls noetig den Log Ordner und Schreibt eine LogInfo
+	 * mit Uhrzeit.
+	 * 
+	 * @param txt - Die Methode getOnlineIP() und runUpdaterUrl() schreiben in die
+	 *            Log woher der Fehler kommt und welches Datum/Uhrzeit.
+	 */
+	void logBuilder(String txt)
+	{
+		SimpleDateFormat sDF = new SimpleDateFormat("dd.MM.yyyy");
+
+		String date = sDF.format(cal.getTime());
+
+		File dir = new File("log");
+		if (!dir.exists())
+		{
+			dir.mkdirs();
+		}
+
+		File f = new File(dir + File.separator + "DynDNSUpdate_-_" + date + ".log");
+		try
+		{
+			BufferedWriter bw = new BufferedWriter(new FileWriter(f, true));
+			bw.append(txt + "\n");
+			bw.close();
+		}
+		catch (IOException e)
+		{
+			System.out.println(e.getMessage());
+		}
+		System.out.println("\n" + txt);
+	}
+
 }
