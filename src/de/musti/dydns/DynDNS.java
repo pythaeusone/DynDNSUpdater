@@ -1,33 +1,35 @@
 package de.musti.dydns;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 
 /**
  * Diese Klasse beinhaltet alle noetigen Methoden.
  * 
  * @author Musti
- * @version 0.4
+ * @version 1.0
  */
 public class DynDNS implements Runnable
 {
 	String domain;
 	String updateHash;
 	String interval;
-	String lastIP;
-	String ip;
+	String ipOption;
+	String lastIP4;
+	String ip4;
+	String lastIP6;
+	String ip6;
 	String logText;
 	SimpleDateFormat logZeit;
 	Calendar cal;
+
+	boolean ipv4Changed;
+	boolean ipv6Changed;
+
+	RunUpdate ru;
+	GetIP gip;
+	LogBuilder lb;
 	private volatile boolean stopeTimer = false;
 
 	/**
@@ -37,11 +39,17 @@ public class DynDNS implements Runnable
 	 * @param updateHash - Der DynDNS Updatehash.
 	 * @param interval   - Wie oft soll eine arnder ueberprueft werden.
 	 */
-	public DynDNS(String domain, String updateHash, String interval)
+	public DynDNS(String domain, String updateHash, String interval, String ipOption, GetIP gip, LogBuilder lb,
+			RunUpdate ru)
 	{
 		this.domain = domain;
 		this.updateHash = updateHash;
 		this.interval = interval;
+		this.ipOption = ipOption.toLowerCase();
+
+		this.lb = lb;
+		this.ru = ru;
+		this.gip = gip;
 	}
 
 	/**
@@ -53,9 +61,9 @@ public class DynDNS implements Runnable
 		logZeit = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 		cal = new GregorianCalendar();
 
-		int timer = tryParse(interval);
+		System.out.println("DynDNS Updater v1.0 fuer ipv64.net gestartet.\n");
 
-		System.out.println("DynDNS Updater v0.4 fuer ipv64.net gestartet.\n");
+		int timer = tryParse(interval);
 
 		try
 		{
@@ -77,23 +85,63 @@ public class DynDNS implements Runnable
 	 */
 	void updater()
 	{
-		ip = getOnlineIP();
-		if (ip != null)
-		{
-			if (!checkIP(ip))
+		if (ipOption.equals("ipv4") | ipOption.equals("ipv64"))
+			if (gip.getIPvFour() != null)
 			{
-				lastIP = ip;
-				System.out.println("IP hat sich veraendert, Updater wird gestartet.");
-				runUpdaterUrl();
+				ip4 = gip.getIPvFour()[1];
+				if (ip4 != null)
+				{
+					if (!checkIP(ip4))
+					{
+						lastIP4 = ip4;
+						ipv4Changed = true;
+						System.out.println("\nIPv4 hat sich veraendert, Updater wird vorbereitet.");
+					}
+				}
+				else
+				{
+					System.out.println("\nIPv4 konnte nicht ermittelt werden!");
+				}
 			}
-		}
-		else
-		{
-			System.out.println("IPv4 konnte nicht ermittelt werden!");
-		}
+			else
+			{
+				lb.logBuilder("\nGET-IPv4 Error:" + gip.getIPvFour()[0] + " | " + logZeit.format(cal.getTime()) + " | "
+						+ gip.getIPvFour()[1]);
+				signalStopeTimer();
+			}
 
+		if (ipOption.equals("ipv6") | ipOption.equals("ipv64"))
+			if (gip.getIPvSix() != null)
+			{
+				ip6 = gip.getIPvSix()[1];
+				if (ip6 != null)
+				{
+					if (!checkIP(ip6))
+					{
+						lastIP6 = ip6;
+						ipv6Changed = true;
+						System.out.println("\nIPv6 hat sich veraendert, Updater wird vorbereitet.");
+					}
+				}
+				else
+				{
+					System.out.println("\nIPv6 konnte nicht ermittelt werden!");
+				}
+			}
+			else
+			{
+				lb.logBuilder("\nGET-IPv6 Error:" + gip.getIPvSix()[0] + " | " + logZeit.format(cal.getTime()) + " | "
+						+ gip.getIPvSix()[1]);
+				signalStopeTimer();
+			}
+
+		if (ipOption.equals("ipv4") && ipv4Changed)
+			runUpdaterUrl(prepareRunUpdaterUrl());
+		if (ipOption.equals("ipv6") && ipv6Changed)
+			runUpdaterUrl(prepareRunUpdaterUrl());
+		if (ipOption.equals("ipv64") && ipv4Changed && ipv6Changed)
+			runUpdaterUrl(prepareRunUpdaterUrl());
 	}
-
 
 	/**
 	 * Diese Methode vergleicht die neu eingelesene IP mit der alten gespeicherten.
@@ -103,73 +151,66 @@ public class DynDNS implements Runnable
 	 */
 	boolean checkIP(String ip)
 	{
-		if (lastIP != null)
-			if (lastIP.equals(ip))
+		if (lastIP4 != null)
+			if (lastIP4.equals(ip))
 			{
-				System.out.println("IP hat sich nicht geaendert.");
+				System.out.println("\nIPv4 hat sich nicht geaendert.");
+				ipv4Changed = false;
+				return true;
+			}
+
+		if (lastIP6 != null)
+			if (lastIP6.equals(ip))
+			{
+				System.out.println("\nIPv6 hat sich nicht geaendert.");
+				ipv6Changed = false;
 				return true;
 			}
 
 		return false;
 	}
 
+	String prepareRunUpdaterUrl()
+	{
+
+		if (ipOption.equals("ipv4"))
+			return "https://ipv64.net/update.php?key=" + updateHash + "&domain=" + domain + "&ip=" + lastIP4;
+		if (ipOption.equals("ipv6"))
+			return "https://ipv64.net/update.php?key=" + updateHash + "&domain=" + domain + "&ip=" + lastIP6;
+		if (ipOption.equals("ipv64"))
+			return "https://ipv64.net/update.php?key=" + updateHash + "&domain=" + domain + "&ip=" + lastIP4 + "&ip6="
+					+ lastIP6;
+
+		return null;
+	}
+
 	/**
 	 * Diese Methode ruft den Updater von ipv64.net auf und zerlegt die Seite für
 	 * ein Output.
 	 */
-	void runUpdaterUrl()
+	void runUpdaterUrl(String ipArt)
 	{
-		try
-		{
-			System.out.println("Sende request an ipv64.net ...\n");
-			Document d = Jsoup
-					.connect("https://ipv64.net/update.php?key=" + updateHash + "&domain=" + domain + "&ip=" + lastIP)
-					.ignoreContentType(true).get();
-			Elements tbody = d.select("body");
-			String[] bodyArray = (tbody.text().replaceAll("\\{", "").replaceAll("\\}", "")).split(",");
+		String[] responseArray = ru.udapteIP(ipArt);
 
-			for (String bA : bodyArray)
+		if (responseArray != null)
+		{
+			if (responseArray[1] != null)
 			{
-				System.out.println(bA.replaceAll("\"", " "));
+				if (ipOption.equals("ipv4") | ipOption.equals("ipv64"))
+					lb.logBuilder("UPDATER | " + logZeit.format(cal.getTime()) + " | LastIPv4: " + lastIP4
+							+ " | NewIPv4: " + ip4);
+				if (ipOption.equals("ipv6") | ipOption.equals("ipv64"))
+					lb.logBuilder("UPDATER | " + logZeit.format(cal.getTime()) + " | LastIPv6: " + lastIP6
+							+ " | NewIPv6: " + ip6);
+			}
+			else
+			{
+				lb.logBuilder("\nUPDATER | " + logZeit.format(cal.getTime()) + " | " + responseArray[0]);
+				signalStopeTimer();
 			}
 
-			logBuilder("UPDATER | " + logZeit.format(cal.getTime()) + " | LastIP: " + lastIP + " | NewIP: " + ip);
 		}
-		catch (IOException e)
-		{
-			System.out.println("Request fehlgeschlagen!");
-			logBuilder(
-					"\nUPDATER | " + logZeit.format(cal.getTime()) + " | Request fehlgeschlagen! Thread wird gestopt.");
-			e.printStackTrace();
-			signalStopeTimer();
-		}
-	}
 
-
-	/**
-	 * Es wird ein Request an ifconfig.me gesendet und die IPv4 ermittelt.
-	 * 
-	 * @return - Return ist die Empfangene IPv4 Adresse.
-	 */
-	String getOnlineIP()
-	{
-		Document d = null;
-		try
-		{
-			d = Jsoup.connect("https://ipv4.ipv64.net").timeout(6000).get();
-			Elements tbody = d.select("div.card-body dl.row dd.col-sm-7");
-
-			return tbody.val();
-		}
-		catch (IOException e)
-		{
-			System.out.println("https://ipv64.net evtl. nicht erreichbar!");
-			logBuilder("\nGET-IP | " + logZeit.format(cal.getTime())
-					+ " | https://ipv64.net evtl. nicht erreichbar! Thread wird gestopt.");
-			e.printStackTrace();
-			signalStopeTimer();
-		}
-		return null;
 	}
 
 	/**
@@ -177,7 +218,9 @@ public class DynDNS implements Runnable
 	 */
 	void signalStopeTimer()
 	{
-		logBuilder("\nEXIT | " + logZeit.format(cal.getTime()) + " | Programm wurde wegen einem fehler beendet.\n");
+		lb.logBuilder("\nEXIT | " + logZeit.format(cal.getTime()) + " | Programm wurde wegen einem fehler beendet.\n");
+		System.out.println(
+				"\nEXIT | " + logZeit.format(cal.getTime()) + " | Programm wurde wegen einem fehler beendet.\n");
 		stopeTimer = true;
 		System.exit(0);
 	}
@@ -203,38 +246,4 @@ public class DynDNS implements Runnable
 			return 300000;
 		}
 	}
-
-	/**
-	 * Diese Methode erstellt, falls noetig den Log Ordner und Schreibt eine LogInfo
-	 * mit Uhrzeit.
-	 * 
-	 * @param txt - Die Methode getOnlineIP() und runUpdaterUrl() schreiben in die
-	 *            Log woher der Fehler kommt und welches Datum/Uhrzeit.
-	 */
-	void logBuilder(String txt)
-	{
-		SimpleDateFormat sDF = new SimpleDateFormat("dd.MM.yyyy");
-
-		String date = sDF.format(cal.getTime());
-
-		File dir = new File("log");
-		if (!dir.exists())
-		{
-			dir.mkdirs();
-		}
-
-		File f = new File(dir + File.separator + "DynDNSUpdate_-_" + date + ".log");
-		try
-		{
-			BufferedWriter bw = new BufferedWriter(new FileWriter(f, true));
-			bw.append(txt + "\n");
-			bw.close();
-		}
-		catch (IOException e)
-		{
-			System.out.println(e.getMessage());
-		}
-		System.out.println("\n" + txt);
-	}
-
 }

@@ -4,7 +4,7 @@ package de.musti.dydns;
  * Die Mainklasse :)
  * 
  * @author Musti
- * @version 0.4
+ * @version 1.0
  */
 public class Main
 {
@@ -15,7 +15,12 @@ public class Main
 	 */
 	public static void main(String[] args)
 	{
-		DynDNS dyn = new DynDNS(args[0], args[1], args[2]);
+		LogBuilder lb = new LogBuilder();
+		GetResponseCode grc = new GetResponseCode();
+		RunUpdate ru = new RunUpdate(lb, grc);
+		GetIP gip = new GetIP(lb, grc);
+
+		DynDNS dyn = new DynDNS(args[0], args[1], args[2], args[3], gip, lb, ru);
 
 		Thread thread = new Thread(dyn);
 		thread.start();
