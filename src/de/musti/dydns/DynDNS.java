@@ -37,7 +37,11 @@ public class DynDNS implements Runnable
 	 * 
 	 * @param domain     - Die Domain worum es beim Update geht.
 	 * @param updateHash - Der DynDNS Updatehash.
-	 * @param interval   - Wie oft soll eine arnder ueberprueft werden.
+	 * @param interval   - Ueberprueft jede x min wie die aktuelle IP ist.
+	 * @param ipOption   - Beim ausfuehren des Programms gibt man ipv4/6 an.
+	 * @param gip        - Die Kontrolle von GetIP wird hier uebergeben.
+	 * @param lb         - Die Kontrolle vom LogBuilder wird hier uebergeben.
+	 * @param ru         - Die Kontrolle vom RunUpdate wird hier uebergeben.
 	 */
 	public DynDNS(String domain, String updateHash, String interval, String ipOption, GetIP gip, LogBuilder lb,
 			RunUpdate ru)
@@ -170,6 +174,11 @@ public class DynDNS implements Runnable
 		return false;
 	}
 
+	/**
+	 * Diese Methode baut den Update String zusammen und gibt ihn zurueck.
+	 * 
+	 * @return - Update STring fuer den DynDNS Server.
+	 */
 	String prepareRunUpdaterUrl()
 	{
 
@@ -186,7 +195,7 @@ public class DynDNS implements Runnable
 
 	/**
 	 * Diese Methode ruft den Updater von ipv64.net auf und zerlegt die Seite für
-	 * ein Output.
+	 * ein Output. Danach wird das Ergebnis in die Logdatei geschrieben.
 	 */
 	void runUpdaterUrl(String ipArt)
 	{
@@ -214,7 +223,7 @@ public class DynDNS implements Runnable
 	}
 
 	/**
-	 * Diese Methode ist fuer die Zukunft, damit es spaeter ein Off Schalter gibt.
+	 * Killswitch falls etwas schief laeuft. Logdatei wird ein Eintrag gemacht.
 	 */
 	void signalStopeTimer()
 	{

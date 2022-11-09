@@ -9,9 +9,10 @@ package de.musti.dydns;
 public class Main
 {
 	/**
-	 * Startpunkt von Java.
+	 * Der Startpunkt von Java.
 	 * 
-	 * @param args - Erwartet Domain, UpdaterHash, Intervalzeit in minuten.
+	 * @param args - Erst die Domain, dann der UpdateHash, dann der Intaval in min
+	 *             und zum Ende welche IPArt.
 	 */
 	public static void main(String[] args)
 	{

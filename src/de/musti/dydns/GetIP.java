@@ -10,6 +10,12 @@ import java.util.GregorianCalendar;
 
 import org.json.JSONObject;
 
+/**
+ * Diese Klasse kuemmert sich um die Globale IP.
+ * 
+ * @author Musti
+ * @version 1.0
+ */
 public class GetIP
 {
 	private final static String iPvFour = "https://ipv4.ipv64.net/update.php?howismyip";
@@ -21,6 +27,12 @@ public class GetIP
 	LogBuilder lb;
 	GetResponseCode grc;
 
+	/**
+	 * Der Konstruktor von GetIP.
+	 * 
+	 * @param lb  - Die Kontrolle ueber den Logbuilder wird hier uebergeben.
+	 * @param grc - Die Kontrolle ueber den ResponseCode Handler wird hier
+	 */
 	public GetIP(LogBuilder lb, GetResponseCode grc)
 	{
 		this.lb = lb;
@@ -30,6 +42,11 @@ public class GetIP
 		cal = new GregorianCalendar();
 	}
 
+	/**
+	 * Diese Methode ruft die parseIP fuer IPv4 auf.
+	 * 
+	 * @return - Gibt ein Array zurueck mit Antworten vom Server.
+	 */
 	public String[] getIPvFour()
 	{
 		try
@@ -43,6 +60,11 @@ public class GetIP
 		}
 	}
 
+	/**
+	 * Diese Methode ruft die parseIP fuer IPv6 auf.
+	 * 
+	 * @return - Gibt ein Array zurueck mit Antworten vom Server.
+	 */
 	public String[] getIPvSix()
 	{
 		try
@@ -56,6 +78,13 @@ public class GetIP
 		}
 	}
 
+	/**
+	 * Diese Methode bekommt die IP Check URL und zerlegt die JSON.
+	 * 
+	 * @param getIpLink - Die URL welche IPv4/6 zurueck gibt.
+	 * @return - Gibt ein String Array mit Response Infos zurueck.
+	 * @throws Exception - Uebergibt die Exception getIP Methoden.
+	 */
 	private String[] parseIP(String getIpLink) throws Exception
 	{
 		String[] returnArray = new String[2];

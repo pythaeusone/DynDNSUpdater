@@ -8,11 +8,20 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
+/**
+ * Diese Klasse kuemmert sich um das Schreiben der Logdatei.
+ * 
+ * @author Musti
+ * @version 1.0
+ */
 public class LogBuilder
 {
 	Calendar cal;
 	SimpleDateFormat sDF;
 
+	/**
+	 * Der Konstruktor vom LogBuilder.
+	 */
 	public LogBuilder()
 	{
 		cal = new GregorianCalendar();
@@ -20,11 +29,10 @@ public class LogBuilder
 	}
 
 	/**
-	 * Diese Methode erstellt, falls noetig den Log Ordner und Schreibt eine LogInfo
-	 * mit Uhrzeit.
+	 * Dieser logBuilder erstellt falls noetig den Ordner log und schreibt dann
+	 * Logfiles mit dem aktuellen Datum.
 	 * 
-	 * @param txt - Die Methode getOnlineIP() und runUpdaterUrl() schreiben in die
-	 *            Log woher der Fehler kommt und welches Datum/Uhrzeit.
+	 * @param txt - Erhaelt die Information, welche geschrieben werden soll.
 	 */
 	public void logBuilder(String txt)
 	{
@@ -47,7 +55,6 @@ public class LogBuilder
 		{
 			System.out.println(e.getMessage());
 		}
-		// System.out.println("\n" + txt);
 	}
 
 }

@@ -7,11 +7,24 @@ import java.net.URL;
 
 import org.json.JSONObject;
 
+/**
+ * Diese Klasse dient dem Update.
+ * 
+ * @author Musti
+ * @version 1.0
+ */
 public class RunUpdate
 {
 	LogBuilder lb;
 	GetResponseCode grc;
 
+	/**
+	 * Der Konstruktor
+	 * 
+	 * @param lb  - Die Kontrolle ueber den Logbuilder wird hier uebergeben.
+	 * @param grc - Die Kontrolle ueber den ResponseCode Handler wird hier
+	 *            uebergeben.
+	 */
 	public RunUpdate(LogBuilder lb, GetResponseCode grc)
 	{
 		this.lb = lb;
@@ -19,6 +32,13 @@ public class RunUpdate
 
 	}
 
+	/**
+	 * Diese Methode bekommt den UpdateURL String und fuehrt diese ueber den Parser
+	 * aus.
+	 * 
+	 * @param updateLink - Die Update URL
+	 * @return - Gibt ein Array zurueck mit Antworten vom Server.
+	 */
 	public String[] udapteIP(String updateLink)
 	{
 		try
@@ -32,6 +52,14 @@ public class RunUpdate
 		}
 	}
 
+	/**
+	 * Diese Methode nimmt den StringURL und sendet ein Request an den DynDNS
+	 * Server, danach wird das JSON Ergebnis zerlegt und ausgegeben.
+	 * 
+	 * @param updateLink - Die Update URL
+	 * @return - Gibt ein Array zurueck mit Antworten vom Server.
+	 * @throws Exception - Die Methode udapteIP() gibt dann ein NULL zurueck.
+	 */
 	private String[] parseUpdate(String updateLink) throws Exception
 	{
 		String[] returnArray = new String[2];
